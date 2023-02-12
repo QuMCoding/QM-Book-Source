@@ -1,3 +1,4 @@
+# 雙狹縫干涉實驗模擬
 from matplotlib import pyplot as plt
 import numpy as np
 
