@@ -1,28 +1,32 @@
 # 雙狹縫干涉實驗模擬
-from matplotlib import pyplot as plt
-import numpy as np
-
-lim_top = 1e-16
-lim_bottom = -1e-16
-lim_total = 1000
-hbar = 6.62607015e-34
+from matplotlib import pyplot as plt  # 可以繪製統計圖
+import numpy as np  # 用於向量與矩陣運算
 
 
-def new_shot(xes, dots=lim_total):
+# 常數定義
+lim_top = 1e-16  # 定義模擬圖的左邊界
+lim_bottom = -1e-16  # 定義模擬圖的右邊界
+hbar = 6.62607015e-34  # 普朗克常數
+
+
+def new_shot(dots=1000):
+    """多射dots顆電子"""
     # a = lim_top - lim_bottom
     # p = xes
     # psi_p ** 2 = (a/(2*pi*hbar)) * (1+cos(p*a/hbar))
-    a = lim_top - lim_bottom
-    prob = (a / (2 * np.pi * hbar)) * (1. + np.cos(xes * a / hbar))
-    _x = np.random.choice(xes, dots, p=prob/np.sum(prob))
+    xes = np.linspace(lim_bottom, lim_top, 1000)  # 定義可以射到的x軸位置，為lim_bottom~lim_top之間平分1000個點
+    a = lim_top - lim_bottom  # 計算可射處總長度
+    prob = (a / (2 * np.pi * hbar)) * (1. + np.cos(xes * a / hbar))  # 計算射到每個點的機率
+    _x = np.random.choice(xes, dots, p=prob/np.sum(prob))  # 計算射到的點
+    # 畫上去，並將y軸座標隨機選擇
     plt.scatter(_x, np.random.uniform(lim_bottom, lim_top, _x.shape), s=0.1, c=np.zeros((len(_x),)))
 
 
-new_shot(np.linspace(lim_bottom, lim_top, 1000), 10)
-plt.show()
-new_shot(np.linspace(lim_bottom, lim_top, 1000), 100)
-plt.show()
-new_shot(np.linspace(lim_bottom, lim_top, 1000), 1000)
-plt.show()
-new_shot(np.linspace(lim_bottom, lim_top, 1000), 10000)
-plt.show()
+new_shot(10)  # 射10個電子
+plt.show()  # 畫出結果
+new_shot(100)  # 射100個電子
+plt.show()  # 畫出結果，並清除上次的圖
+new_shot(1000)  # 射1000個電子
+plt.show()  # 畫出結果，並清除上次的圖
+new_shot(10000)  # 射10000個電子
+plt.show()  # 畫出結果，並清除上次的圖
