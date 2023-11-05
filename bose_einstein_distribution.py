@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.widgets import Button, Slider
+from matplotlib.widgets import Slider
 
 def bose_einstein_distribution(energy, temperature):
     """
