@@ -114,7 +114,7 @@ def image_broadcast_function(current_step):
     return broadcasting_elements, broadcasting_mask, wave_speed
 
 # Load image for broadcasting function
-waveguide_img = imageio.imread("./Waveguide.bmp")
+waveguide_img = imageio.imread("./guide_path.bmp")
 
 # Run the wave simulation
 run_wave_simulation(pixel_size, time_step, grid_height, grid_width, simulation_steps, image_broadcast_function)
