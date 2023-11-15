@@ -2,8 +2,11 @@ import numpy as np
 import math
 import imageio.v2 as imageio
 import cv2
+import os
 
 DISPLAY_SIMULATION = True
+out_video_name = "waveguide1.mp4"
+path_alpha = 0.2
 
 # Function to calculate the Laplace operator used in the wave equation
 def calculate_laplace_operator(displacement_grid, step_size):
@@ -38,17 +41,16 @@ def run_wave_simulation(pixel_size, time_step, grid_height, grid_width, simulati
     displacement_grid = np.zeros((grid_height, grid_width), np.float32)
     velocity_grid = np.zeros((grid_height, grid_width), np.float32)
 
-    red_channel = np.zeros((grid_height, grid_width), np.float32)
-    green_channel = np.zeros((grid_height, grid_width), np.float32)
-    blue_channel = np.zeros((grid_height, grid_width), np.float32)
-
-    output_data = np.zeros((grid_height, grid_width, 3), np.uint8)
+    output_data = np.zeros((grid_height, grid_width, 3), np.float32)
 
     # Create a video writer
-    writer = imageio.get_writer("./waveguide.mp4", fps=30)
+    if os.path.exists(out_video_name):
+        input("Video file already exists. Press Enter to overwrite or Ctrl+C to cancel.")
+        os.remove(out_video_name)
+    writer = imageio.get_writer(out_video_name, fps=30)
 
     for current_step in range(0, simulation_steps):
-        print(f"Step {current_step}/{simulation_steps}")
+        print(f"Step {current_step}/{simulation_steps}", end="\r")
 
         # Get broadcasting elements, mask, and wave speed from the broadcast function
         broadcasting_elements, broadcasting_mask, wave_speed = broadcast_function(current_step)
@@ -62,21 +64,18 @@ def run_wave_simulation(pixel_size, time_step, grid_height, grid_width, simulati
         updated_displacement = displacement_grid
         updated_displacement[broadcasting_mask == 1] = 0
 
-        # Separate displacement values into RGB channels for visualization
-        red_channel = np.maximum(updated_displacement, 0) / np.max(np.maximum(updated_displacement, 0) + 1e-10)
-        green_channel = np.minimum(updated_displacement, 0) / np.min(np.minimum(updated_displacement, 0) + 1e-10)
-        blue_channel[broadcasting_mask == 1] = 1
+        # Update output data red and green channels with the updated displacement
+        output_data[0:grid_height, 0:grid_width, 0] = np.maximum(updated_displacement, 0) / np.max(np.maximum(updated_displacement, 0) + 1e-10) * 255
+        output_data[0:grid_height, 0:grid_width, 1] = np.minimum(updated_displacement, 0) / np.min(np.minimum(updated_displacement, 0) + 1e-10) * 255
+        
+        # mark the path
+        output_data = output_data * (1 - path_alpha) + (waveguide_img) * path_alpha
 
         # Highlight edges in the blue channel
-        blue_channel[detect_edges(wave_speed) == 1] = 1
-
-        # Create RGB image for visualization
-        output_data[0:grid_height, 0:grid_width, 0] = red_channel[0:grid_height, 0:grid_width] * 255
-        output_data[0:grid_height, 0:grid_width, 1] = green_channel[0:grid_height, 0:grid_width] * 255
-        output_data[0:grid_height, 0:grid_width, 2] = blue_channel * 255
-        output_data[0, 0, 0] = 1
+        output_data[0:grid_height, 0:grid_width, 2] = detect_edges(wave_speed) * 255
 
         # Append current frame to the video
+        output_data = output_data.astype(np.uint8)
         writer.append_data(output_data)
 
         if DISPLAY_SIMULATION:
@@ -91,7 +90,7 @@ pixel_size = 0.1
 time_step = 0.01
 grid_height = 1024
 grid_width = 1024
-simulation_steps = 30000
+simulation_steps = 8000
 
 # Broadcasting function based on an image
 def image_broadcast_function(current_step):
