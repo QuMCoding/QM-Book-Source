@@ -7,6 +7,7 @@ import numpy as np
 import scipy.constants as sc
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import os
 
 
 # Class for QMT FDTD
@@ -74,52 +75,27 @@ def fig_update(nn, q1, ax1):
 
 def run_sim(V0_in, bw_in, ke_in, sig_in):
     q1 = QMfdtd(V0_in, bw_in, ke_in, sig_in)
-    print('')
-    print('Potential barrier =', round(q1.V0 / sc.value('electron volt'), 2), 'eV')
-    print('Potential barrier width =', round(q1.bw / sc.value('Angstrom star'), 2), 'A')
-    print('(The boundary of the simulation domain is assumed to be an infinite barrier)')
-    print('Electron energy =', round(q1.ke / sc.value('electron volt'), 2), 'eV')
-    print('Electron spread =', round(q1.sig / sc.value('Angstrom star'), 2), 'A')
-    print('')
-    print('Grid size =', '%.2e' % (q1.dx / sc.value('Angstrom star')), 'A')
-    print('Time step =', "%.2e" % (q1.dt * 1e15), 'fs')
-    plt.ion()
-    fig0 = plt.figure()
-    ax0 = fig0.add_subplot(111)
-    ax0.set_xlabel('position ($\AA$)')
-    ax0.set_ylabel('$\Psi$')
-    ax0.set_title('Initial wavefunctions (normalized)')
-    ax0.plot(q1.lx / sc.value('Angstrom star'), q1.psimag / np.amax(q1.psimag), label='$|\Psi|^2$')
-    ax0.plot(q1.lx / sc.value('Angstrom star'), q1.Vx / np.amax(q1.Vx), label='barrier')
-    ax0.plot(q1.lx / sc.value('Angstrom star'), q1.psii / np.amax(q1.psii), label='$\Im[\Psi]$', alpha=0.5)
-    ax0.plot(q1.lx / sc.value('Angstrom star'), q1.psir / np.amax(q1.psir), label='$\Re[\Psi]$', alpha=0.5)
-    ax0.legend()
-    fig0.show()
-    fig0.tight_layout()
-    fig0.canvas.draw()
-    input('Press enter to start the simulation...')
     fig1 = plt.figure()
     ax1 = fig1.add_subplot(111)
     ax1.set_xlabel('position ($\AA$)')
     ax1.set_ylabel('norm magnitude')
-    fig1.show()
-    fig1.canvas.draw()
-    # for nn in range(0, q1.tt):
-    #     q1.fdtd_update()
-    #     if nn % 50 == 0:
-    #         tstr = 'Time = ' + str(round(nn * q1.dt * 1e15, 4)) + ' fs'
-    #         ax1.clear()
-    #         ax1.plot(q1.lx / sc.value('Angstrom star'), q1.psimag / np.amax(q1.psimag), label='$|\Psi|^2$')
-    #         ax1.plot(q1.lx / sc.value('Angstrom star'), q1.Vx / np.amax(q1.Vx), label='barrier')
-    #         ax1.legend()
-    #         ax1.set_title(tstr)
-    #         ax1.set_xlabel('position ($\AA$)')
-    #         ax1.set_ylabel('normalized magnitude')
-    #         fig1.canvas.draw()
+    for nn in range(0, q1.tt):
+        q1.fdtd_update()
+        if nn % 50 == 0:
+            tstr = 'Time = ' + str(round(nn * q1.dt * 1e15, 4)) + ' fs'
+            ax1.clear()
+            ax1.plot(q1.lx / sc.value('Angstrom star'), q1.psimag / np.amax(q1.psimag), label='$|\Psi|^2$')
+            ax1.plot(q1.lx / sc.value('Angstrom star'), q1.Vx / np.amax(q1.Vx), label='barrier')
+            ax1.legend()
+            ax1.set_title(tstr)
+            ax1.set_xlabel('position ($\AA$)')
+            ax1.set_ylabel('normalized magnitude')
+            plt.savefig(os.path.join("out", 'qmt' + str(nn) + '.png'))
 
-    ani = animation.FuncAnimation(fig1, fig_update, frames=q1.tt, fargs=(q1, ax1), blit=True)
-    ani.save('tunneling.mp4', writer='ffmpeg', fps=30)
-    plt.show()
+    # ani = animation.FuncAnimation(fig1, fig_update, frames=q1.tt, fargs=(q1, ax1), blit=True)
+    # ani.save('qmt.gif', fps=30)
+        
+    
 
     fig2 = plt.figure()
     ax2 = fig2.add_subplot(111)
