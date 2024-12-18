@@ -1,6 +1,6 @@
 from math import comb
 
-n = int(input("盒子數量:"))
+n = int(input("狀態數量:"))
 m = int(input("粒子數量:"))
 
 normal = n ** m
