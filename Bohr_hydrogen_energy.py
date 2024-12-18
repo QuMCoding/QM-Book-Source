@@ -20,7 +20,7 @@ for n, energy in zip(n_values, energy_values):
     plt.plot([0, 1], [energy, energy], label=f"n={n}", color='black')
     plt.text(1.025, energy, f"n={n}", color='black')
 # 畫箭頭表示電子躍遷
-plt.arrow(0.5, hydrogen_energy(n1), 0, hydrogen_energy(n2) - hydrogen_energy(n1)-0.3,
+plt.arrow(0.5, hydrogen_energy(n1), 0, hydrogen_energy(n2) - hydrogen_energy(n1)+0.3*(n1-n2)/abs(n1-n2),
           head_width=0.02, head_length=0.3, fc='blue', ec='blue')
 # 標註箭頭和能量差
 plt.text(0.7, (hydrogen_energy(n1) + hydrogen_energy(n2)) / 2, f"ΔE = {delta_E:.2f} eV", color='blue')
