@@ -1,94 +1,93 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-def potential(x):
-    global V0, well_start, well_end
-    return 0. if well_start <= x <= well_end else V0
+# 此處為可以修改的參數
+NEIG = 4  # 要計算的能量狀態數
+# V0 是方形阱的深度，sqa 和 sqb 是方形阱的左右邊界
+V0, sqa, sqb = 250, 0., 1.
+# 以下為計算的函數
 
-def wave_function(a, b, num_points, energy, psi_start, psi_next, potential_func):
-    h = (b - a) / num_points
+def V_pot(x):
+    return 0. if sqa <= x <= sqb else V0
+
+def psi_r(a, b, Nh, E, psi_00, psi_01, V):
+    h = (b - a) / Nh
     h2 = h ** 2
-    psi_0 = psi_start
-    psi_1 = psi_next
-    for i in range(num_points):
+    psi_0 = psi_00
+    psi_1 = psi_01
+    for i in range(Nh):
         x = a + h * i
-        k_squared = 2. * (energy - potential_func(x))
-        psi_2 = 2. * psi_1 - psi_0 - k_squared * psi_1 * h2
+        ksq = 2. * (E - V(x))
+        psi_2 = 2. * psi_1 - psi_0 - ksq * psi_1 * h2
         psi_0 = psi_1
         psi_1 = psi_2
     return psi_1
-
-def shoot(a, b, num_points, energy_low, energy_high, psi_start, psi_next, potential_func):
-    E1, E2 = energy_low, energy_high
+def Shoot(a, b, Nh, Ea, Eb, psi_00, psi_01, V):
+    E1, E2 = Ea, Eb
     for _ in range(120):
-        psi1 = wave_function(a, b, num_points, E1, psi_start, psi_next, potential_func)
-        psi2 = wave_function(a, b, num_points, E2, psi_start, psi_next, potential_func)
-        if (psi1 - psi_start) * (psi2 - psi_start) > 0.:
+        ps1 = psi_r(a, b, Nh, E1, psi_00, psi_01, V)
+        ps2 = psi_r(a, b, Nh, E2, psi_00, psi_01, V)
+        if (ps1 - psi_00) * (ps2 - psi_00) > 0.:
             return E1, E2
         else:
             E_mid = (E1 + E2) / 2.
-            psi_mid = wave_function(a, b, num_points, E_mid, psi_start, psi_next, potential_func)
-            if (psi_mid - psi_start) * (psi1 - psi_start) < 0.:
+            pst = psi_r(a, b, Nh, E_mid, psi_00, psi_01, V)
+            if (pst - psi_00) * (ps1 - psi_00) < 0.:
                 E2 = E_mid
             else:
                 E1 = E_mid
     return E1, E2
-
-def compute_wave_function(a, b, num_points, energy, psi_start, psi_next, potential_func):
-    h = (b - a) / num_points
+def PsiE(a, b, Nh, E, psi_00, psi_01, V):
+    h = (b - a) / Nh
     h2 = h ** 2
-    psi_0 = psi_start
-    psi_1 = psi_next
-    wave_func = [psi_0, psi_1]
-    x_values = [a, a + h]
-    for i in range(num_points):
+    psi_0 = psi_00
+    psi_1 = psi_01
+    Psi = [psi_0, psi_1]
+    xa = [a, a + h]
+    for i in range(Nh):
         x = a + h * i
-        k_squared = 2. * (energy - potential_func(x))
-        psi_2 = 2. * psi_1 - psi_0 - k_squared * psi_1 * h2
+        ksq = 2. * (E - V(x))
+        psi_2 = 2. * psi_1 - psi_0 - ksq * psi_1 * h2
         psi_0 = psi_1
         psi_1 = psi_2
-        wave_func.append(psi_2)
-        x_values.append(x + h)
-    norm = np.sqrt(np.sum(np.array(wave_func) ** 2) * h)
-    wave_func = np.array(wave_func) / norm
-    return wave_func, x_values
+        Psi.append(psi_2)
+        xa.append(x + h)
+    norm = np.sqrt(np.sum(np.array(Psi) ** 2) * h)
+    Psi = np.array(Psi) / norm
+    return Psi, xa
 
-###############################----main---------------
-
-V0 = 250  # Potential well depth
-well_start, well_end = 0., 1.  # Well boundaries
-a, b = well_start - 1.00, well_end + 1.00  # Integration boundaries
-num_points = 1000  # Number of points for integration
-h = (b - a) / num_points
-psi_start, psi_next = 1.E-10 * np.exp(-(a) ** 2), 1.E-10 * np.exp(-(a + h) ** 2)
-
-# ======shoot eigen-energies====
-energies = np.linspace(0, 600, 1200)
-eigen_energies = []
-num_eigenvalues = 8
+a, b = sqa - 1.00, sqb + 1.00
+Nh = 1000
+h = (b - a) / Nh
+psi_00, psi_01 = 1.E-10 * np.exp(-(a) ** 2), 1.E-10 * np.exp(-(a + h) ** 2)
+ENERGY_LEVELS = np.linspace(0, 600, 1200)
+Energy_list = []
 accuracy = 1.e-3
-previous_energy = 0
-for i in range(len(energies) - 1):
-    if len(eigen_energies) == num_eigenvalues:
+KK = 0
+for i in range(len(ENERGY_LEVELS) - 1):
+    if len(Energy_list) == NEIG:
         break
-    E1, E2 = shoot(a, b, num_points, energies[i], energies[i + 1], psi_start, psi_next, potential)
-    if (previous_energy == 0) and (abs((E1 - E2) / E2) < accuracy):
-        eigen_energies.append((E1 + E2) / 2.)
-        previous_energy = (E1 + E2) / 2.
+    E1, E2 = Shoot(a, b, Nh, ENERGY_LEVELS[i], ENERGY_LEVELS[i + 1], psi_00, psi_01, V_pot)
+    if (KK == 0) and (abs((E1 - E2) / E2) < accuracy):
+        Energy_list.append((E1 + E2) / 2.)
+        Ep = (E1 + E2) / 2.
+        KK = 1
         continue
-    if abs((E1 - E2) / E2) < accuracy and (E1 + E2) / 2. - previous_energy > 0.1:
-        eigen_energies.append((E1 + E2) / 2.)
-        previous_energy = (E1 + E2) / 2.
-
-# 指定要畫出的波函數的量子數 n
-n = 1  # 例如，畫出 n=1 的波函數
-
+    if abs((E1 - E2) / E2) < accuracy and (E1 + E2) / 2. - Ep > 0.1:
+        Energy_list.append((E1 + E2) / 2.)
+        Ep = (E1 + E2) / 2.
 # 計算波函數
-wave_func, x_values = compute_wave_function(a, b, num_points, eigen_energies[n-1], psi_start, psi_next, potential)
+Psi = []
+xa = []
+for E in Energy_list:
+    psi, x = PsiE(a, b, Nh, E, psi_00, psi_01, V_pot)
+    Psi.append(psi)
+    xa.append(x)
 
 # 畫圖
 plt.figure()
-plt.plot(x_values, wave_func, label=f'n={n}')
-plt.title(f'$\Psi_{n}(x)$ 1D finite square well V0=' + str(V0))
+for i in range(len(Psi)):
+    plt.plot(xa[i], Psi[i] + i * 3.5, label=f'n={i+1}')
+plt.title('$\Psi_n(x)$ 1D finite square well $V_0$=' + str(V0))
 plt.legend()
 plt.show()
