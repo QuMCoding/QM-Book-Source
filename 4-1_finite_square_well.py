@@ -88,6 +88,8 @@ for E in Energy_list:
 plt.figure()
 for i in range(len(Psi)):
     plt.plot(xa[i], Psi[i] + i * 3.5, label=f'n={i+1}')
+plt.axvline(sqa, color='k', linestyle='-')  # 畫出方形阱的左邊界
+plt.axvline(sqb, color='k', linestyle='-')  # 畫出方形阱的右邊界
 plt.title('$\Psi_n(x)$ 1D finite square well $V_0$=' + str(V0))
 plt.legend()
 plt.show()
